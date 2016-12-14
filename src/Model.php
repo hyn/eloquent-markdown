@@ -2,9 +2,11 @@
 
 namespace Hyn\Eloquent\Markdown;
 
-use cebe\markdown\Parser as Markdown;
+use Hyn\Frontmatter\Parser as Markdown;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Database\Eloquent\Model as Eloquent;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 abstract class Model extends Eloquent
 {
@@ -17,6 +19,23 @@ abstract class Model extends Eloquent
      */
     protected $keyType = 'string';
 
+    /**
+     * The attribute that holds the raw markdown contents.
+     *
+     * @var string
+     */
+    protected $markdownAttribute = 'markdown';
+
+    /**
+     * The attribute that holds the rendered markdown contents.
+     *
+     * @var string
+     */
+    protected $renderedMarkdownAttribute = 'contents';
+
+    /**
+     * The file type of the markdown file.
+     */
     const FILE_TYPE = '.md';
 
     /**
@@ -62,6 +81,41 @@ abstract class Model extends Eloquent
     }
 
     /**
+     * @param string $markdown
+     */
+    public function setMarkdownContents(string $markdown)
+    {
+        $this->setAttribute($this->markdownAttribute, $markdown);
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getMarkdownContents()
+    {
+        return $this->getAttribute($this->markdownAttribute);
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getRenderedMarkdown()
+    {
+        return $this->getAttribute($this->renderedMarkdownAttribute);
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection
+     */
+    public function getFrontmatterProperties()
+    {
+        return collect(Arr::except($this->getAttributes(), [
+            $this->renderedMarkdownAttribute,
+            $this->markdownAttribute
+        ]));
+    }
+
+    /**
      * @param array $options
      * @return bool
      */
@@ -69,7 +123,7 @@ abstract class Model extends Eloquent
     {
         $saved = $this->getFilesystem()->put(
             $this->getPath(),
-            json_encode($this->getMeta(), JSON_PRETTY_PRINT) . "\n" . $this->getMarkdown()
+            $this->getFrontmatterProperties()->toJson(JSON_PRETTY_PRINT) . "\n" . $this->getMarkdownContents()
         );
 
         $this->exists = true;
@@ -88,10 +142,53 @@ abstract class Model extends Eloquent
      */
     public function getPath(): string
     {
-        return sprintf("%s/%s%s",
-            $this->getTable(),
+        return sprintf("%s%s",
             $this->getKey(),
             static::FILE_TYPE
         );
+    }
+
+    /**
+     * @param string $path
+     * @return static|null
+     */
+    public static function find(string $path)
+    {
+        if (Str::endsWith(static::FILE_TYPE, $path)) {
+            $path = substr($path, -(strlen(static::FILE_TYPE)));
+        }
+
+        $obj = new Static;
+        $obj->id = $path;
+
+        if (!static::getFilesystem()->exists($obj->getPath())) {
+            return null;
+        }
+
+        $obj->exists = true;
+
+        $parsed = static::getMarkdownParser()->parse(
+            static::getFilesystem()->get($obj->getPath())
+        );
+
+        $obj->forceFill(Arr::except(
+            $parsed['meta'], [
+            'id',
+            $obj->markdownAttribute,
+            $obj->renderedMarkdownAttribute
+        ]));
+
+        $obj->setAttribute($obj->markdownAttribute, Arr::get($parsed, 'markdown'));
+        $obj->setAttribute($obj->renderedMarkdownAttribute, Arr::get($parsed, 'html'));
+
+        return $obj;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function performDeleteOnModel()
+    {
+        $this->getFilesystem()->delete($this->getPath());
     }
 }

@@ -10,5 +10,15 @@
         "hyn/frontmatter": "^1.1",
         "illuminate/support": "^5.3",
         "illuminate/database": "^5.3"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Hyn\\Eloquent\\Markdown\\Tests\\": "tests/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^5.7",
+        "illuminate/filesystem": "^5.3",
+        "league/flysystem": "^1.0"
     }
 }
