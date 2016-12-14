@@ -1,0 +1,13 @@
+{
+    "name": "hyn/eloquent-markdown",
+    "autoload": {
+        "psr-4": {
+            "Hyn\\Eloquent\\Markdown\\": "src/"
+        }
+    },
+    "require": {
+        "hyn/frontmatter": "^1.1",
+        "illuminate/support": "^5.3",
+        "illuminate/database": "^5.3"
+    }
+}
