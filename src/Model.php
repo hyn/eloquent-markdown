@@ -17,16 +17,21 @@ abstract class Model extends Eloquent
      */
     protected $keyType = 'string';
 
+    const FILE_TYPE = '.md';
+
+    /**
+     * @var Markdown
+     */
+    protected static $markdownParser;
+
     /**
      * @var Filesystem
      */
     protected static $filesystem;
 
     /**
-     * @var string
+     * @param Filesystem $filesystem
      */
-    protected static $disk;
-
     public static function setFilesystem(Filesystem $filesystem)
     {
         static::$filesystem = $filesystem;
@@ -41,26 +46,52 @@ abstract class Model extends Eloquent
     }
 
     /**
-     * @param string $disk
-     */
-    public static function setDisk(string $disk)
-    {
-        static::$disk = $disk;
-    }
-
-    /**
-     * @return string
-     */
-    public static function getDisk()
-    {
-        return static::$disk;
-    }
-
-    /**
      * @param Markdown $parser
      */
     public static function setMarkdownParser(Markdown $parser)
     {
         static::$markdownParser = $parser;
+    }
+
+    /**
+     * @return Markdown
+     */
+    public static function getMarkdownParser()
+    {
+        return static::$markdownParser;
+    }
+
+    /**
+     * @param array $options
+     * @return bool
+     */
+    public function save(array $options = [])
+    {
+        $saved = $this->getFilesystem()->put(
+            $this->getPath(),
+            json_encode($this->getMeta(), JSON_PRETTY_PRINT) . "\n" . $this->getMarkdown()
+        );
+
+        $this->exists = true;
+
+        if ($saved) {
+            $this->finishSave($options);
+        }
+
+        return $saved;
+    }
+
+    /**
+     * The storage location for the file.
+     *
+     * @return string
+     */
+    public function getPath(): string
+    {
+        return sprintf("%s/%s%s",
+            $this->getTable(),
+            $this->getKey(),
+            static::FILE_TYPE
+        );
     }
 }
