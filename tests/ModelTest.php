@@ -20,7 +20,7 @@ class ModelTest extends TestCase
     /**
      * @test
      */
-    public function write()
+    public function writes_and_deletes()
     {
         $foo = new Example();
         $foo->id = 'write';
