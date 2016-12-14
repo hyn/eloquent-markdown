@@ -154,8 +154,8 @@ abstract class Model extends Eloquent
      */
     public static function find(string $path)
     {
-        if (Str::endsWith(static::FILE_TYPE, $path)) {
-            $path = substr($path, -(strlen(static::FILE_TYPE)));
+        if (Str::endsWith($path, static::FILE_TYPE)) {
+            $path = substr($path, 0, -(strlen(static::FILE_TYPE)));
         }
 
         $obj = new Static;
