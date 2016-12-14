@@ -67,3 +67,9 @@ instance.
 So if you have a file `some/foo.md`, use `Page::find('some/foo.md');` to create a Page object, where any frontmatter
 meta information is stored as properties, the markdown contents are stored in the original state as the `markdown` property
 and the generated html is assigned to the `contents` attribute.
+
+Other stuff that works:
+
+- `save()`
+- `delete()`
+- update the markdown property to renew the rendered content property automatically
