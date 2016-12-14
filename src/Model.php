@@ -49,6 +49,30 @@ abstract class Model extends Eloquent
     protected static $filesystem;
 
     /**
+     * @param static $model
+     * @param null $markdown
+     * @return array
+     */
+    protected static function extractAttributes(&$model, $markdown = null): array
+    {
+        if (!$markdown && $model->exists) {
+            $markdown = static::getFilesystem()->get($model->getPath());
+        }
+
+        $parsed = static::getMarkdownParser()->parse($markdown);
+
+        if (count($parsed['meta'])) {
+            $model->forceFill(Arr::except(
+                $parsed['meta'], [
+                $model->getKeyName(),
+                $model->markdownAttribute,
+                $model->renderedMarkdownAttribute
+            ]));
+        }
+        return $parsed;
+    }
+
+    /**
      * @param Filesystem $filesystem
      */
     public static function setFilesystem(Filesystem $filesystem)
@@ -81,10 +105,15 @@ abstract class Model extends Eloquent
     }
 
     /**
-     * @param string $markdown
+     * @param string|null $markdown
+     * @param bool $render
      */
-    public function setMarkdownContents(string $markdown)
+    public function setMarkdownContents(string $markdown = null, $render = true)
     {
+        if ($render) {
+            static::extractAttributes($this, $markdown);
+        }
+
         $this->setAttribute($this->markdownAttribute, $markdown);
     }
 
@@ -167,16 +196,7 @@ abstract class Model extends Eloquent
 
         $obj->exists = true;
 
-        $parsed = static::getMarkdownParser()->parse(
-            static::getFilesystem()->get($obj->getPath())
-        );
-
-        $obj->forceFill(Arr::except(
-            $parsed['meta'], [
-            'id',
-            $obj->markdownAttribute,
-            $obj->renderedMarkdownAttribute
-        ]));
+        $parsed = static::extractAttributes($obj);
 
         $obj->setAttribute($obj->markdownAttribute, Arr::get($parsed, 'markdown'));
         $obj->setAttribute($obj->renderedMarkdownAttribute, Arr::get($parsed, 'html'));
