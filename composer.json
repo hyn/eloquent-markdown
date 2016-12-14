@@ -1,5 +1,19 @@
 {
     "name": "hyn/eloquent-markdown",
+    "description": "Mix markdown, frontmatter and eloquent models for bling bling",
+    "tags": [
+        "markdown",
+        "frontmatter",
+        "eloquent",
+        "models"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Daniël `Luceos` Klabbers",
+            "email": "daniel+hyn@klabbers.email"
+        }
+    ],
     "autoload": {
         "psr-4": {
             "Hyn\\Eloquent\\Markdown\\": "src/"
