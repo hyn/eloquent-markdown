@@ -1,6 +1,6 @@
 {
     "name": "hyn/eloquent-markdown",
-    "description": "Mix markdown, frontmatter and eloquent models for bling bling",
+    "description": "Mix markdown, frontmatter and eloquent models to easily handle markdown files with meta information by treating them as objects.",
     "tags": [
         "markdown",
         "frontmatter",
